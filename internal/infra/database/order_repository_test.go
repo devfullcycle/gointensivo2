@@ -19,7 +19,8 @@ type OrderRepositoryTestSuite struct {
 func (suite *OrderRepositoryTestSuite) SetupSuite() {
 	db, err := sql.Open("sqlite3", ":memory:")
 	suite.NoError(err)
-	db.Exec("CREATE TABLE orders (id varchar(255) NOT NULL, price float NOT NULL, tax float NOT NULL, final_price float NOT NULL, PRIMARY KEY (id))")
+	db.Exec("CREATE TABLE orders (id varchar(36) primary key)")
+	db.Exec("CREATE TABLE order_item(order_id varchar(36) not null, item_id varchar(36) not null, price float not null, quantity integer not null, total float not null)")
 	suite.Db = db
 }
 
@@ -32,20 +33,22 @@ func TestSuite(t *testing.T) {
 }
 
 func (suite *OrderRepositoryTestSuite) TestSavingOrder() {
-	order, err := entity.NewOrder("123", 10.0, 1.0)
+	order, err := entity.NewOrder("123")
+	order.AddItem(&entity.Item{
+		ID: "1",
+		Name: "Test",
+		Price: 100.00,
+	}, 1)
 	suite.NoError(err)
-	suite.NoError(order.CalculateFinalPrice())
 	repo := NewOrderRepository(suite.Db)
 	err = repo.Save(order)
 	suite.NoError(err)
 
 	var orderResult entity.Order
-	err = suite.Db.QueryRow("select id, price, tax, final_price from orders where id = ?",
-		order.ID).Scan(&orderResult.ID, &orderResult.Price, &orderResult.Tax, &orderResult.FinalPrice)
+	err = suite.Db.QueryRow("select id from orders where id = ?",
+		order.ID).Scan(&orderResult.ID)
 
 	suite.NoError(err)
 	suite.Equal(order.ID, orderResult.ID)
-	suite.Equal(order.Price, orderResult.Price)
-	suite.Equal(order.Tax, orderResult.Tax)
-	suite.Equal(order.FinalPrice, orderResult.FinalPrice)
+	suite.Equal(100.00, order.CalculateFinalPrice())
 }

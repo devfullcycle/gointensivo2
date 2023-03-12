@@ -7,8 +7,16 @@ type OrderRepositoryMemory struct {
 }
 
 func NewOrderRepositoryMemory() *OrderRepositoryMemory {
+	var orders []*entity.Order
+	order, _ := entity.NewOrder("1")
+	order.AddItem(&entity.Item{
+		ID:    "1",
+		Name:  "Item 1",
+		Price: 10.00,
+	}, 1)
+	orders = append(orders, order)
 	return &OrderRepositoryMemory{
-		make([]*entity.Order, 0),
+		Orders: orders,
 	}
 }
 
@@ -20,8 +28,7 @@ func (o *OrderRepositoryMemory) Save(order *entity.Order) error {
 func (o *OrderRepositoryMemory) GetTotal() (int, error) {
 	var total int
 	for _, order := range o.Orders {
-		order.CalculateFinalPrice()
-		total = int(order.FinalPrice)
+		total += int(order.CalculateFinalPrice())
 	}
 	return total, nil
 }
