@@ -3,15 +3,11 @@ package usecase
 import "github.com/devfullcycle/gointensivo2/internal/entity"
 
 type OrderInputDTO struct {
-	ID    string
-	Price float64
-	Tax   float64
+	ID string
 }
 
 type OrderOutputDTO struct {
 	ID         string
-	Price      float64
-	Tax        float64
 	FinalPrice float64
 }
 
@@ -20,22 +16,12 @@ type CalculateFinalPrice struct {
 }
 
 func (c *CalculateFinalPrice) Execute(input OrderInputDTO) (*OrderOutputDTO, error) {
-	order, err := entity.NewOrder(input.ID, input.Price, input.Tax)
-	if err != nil {
-		return nil, err
-	}
-	err = order.CalculateFinalPrice()
-	if err != nil {
-		return nil, err
-	}
-	err = c.OrderRepository.Save(order)
+	existingOrder, err := c.OrderRepository.Find(input.ID)
 	if err != nil {
 		return nil, err
 	}
 	return &OrderOutputDTO{
-		ID:         order.ID,
-		Price:      order.Price,
-		Tax:        order.Tax,
-		FinalPrice: order.FinalPrice,
+		ID:         existingOrder.ID,
+		FinalPrice: existingOrder.CalculateFinalPrice(),
 	}, nil
 }

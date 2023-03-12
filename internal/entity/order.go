@@ -1,19 +1,18 @@
 package entity
 
-import "errors"
+import (
+	"errors"
+)
 
 type Order struct {
 	ID         string
-	Price      float64
-	Tax        float64
-	FinalPrice float64
+	OrderItems []*OrderItem
 }
 
-func NewOrder(id string, price float64, tax float64) (*Order, error) {
+func NewOrder(id string) (*Order, error) {
 	order := &Order{
-		ID:    id,
-		Price: price,
-		Tax:   tax,
+		ID:         id,
+		OrderItems: make([]*OrderItem, 0),
 	}
 	err := order.Validate()
 	if err != nil {
@@ -26,20 +25,21 @@ func (o *Order) Validate() error {
 	if o.ID == "" {
 		return errors.New("id is required")
 	}
-	if o.Price <= 0 {
-		return errors.New("invalid price")
-	}
-	if o.Tax <= 0 {
-		return errors.New("invalid tax")
-	}
 	return nil
 }
 
-func (o *Order) CalculateFinalPrice() error {
-	o.FinalPrice = o.Price + o.Tax
-	err := o.Validate()
+func (o *Order) AddItem(item *Item, quantity int) {
+	orderItem, err := NewOrderItem(item.ID, item.Price, quantity)
 	if err != nil {
-		return err
+		panic(err)
 	}
-	return nil
+	o.OrderItems = append(o.OrderItems, orderItem)
+}
+
+func (o *Order) CalculateFinalPrice() float64 {
+	finalPrice := 0.0
+	for _, orderItem := range o.OrderItems {
+		finalPrice += orderItem.CalculateTotal()
+	}
+	return finalPrice
 }

@@ -17,10 +17,16 @@ func NewOrderRepository(db *sql.DB) *OrderRepository {
 }
 
 func (r *OrderRepository) Save(order *entity.Order) error {
-	_, err := r.Db.Exec("Insert into orders (id, price, tax, final_price) Values(?,?,?,?)",
-		order.ID, order.Price, order.Tax, order.FinalPrice)
+	_, err := r.Db.Exec("insert into orders (id) Values(?)", order.ID)
 	if err != nil {
 		return err
+	}
+	for _, orderItem := range order.OrderItems {
+		_, err := r.Db.Exec("insert into order_item(order_id, item_id, price, quantity, total) values(?, ?, ?, ?, ?)",
+			order.ID, orderItem.ItemID, orderItem.Price, orderItem.Quantity, order.CalculateFinalPrice())
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -32,4 +38,13 @@ func (r *OrderRepository) GetTotal() (int, error) {
 		return 0, err
 	}
 	return total, nil
+}
+
+func (r *OrderRepository) Find(OrderID string) (*entity.Order, error) {
+	var order *entity.Order
+	err := r.Db.QueryRow("select id from orders where id = ?", OrderID).Scan(&order)
+	if err != nil {
+		return nil, err
+	}
+	return order, nil
 }
