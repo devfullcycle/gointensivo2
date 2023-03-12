@@ -1,7 +1,6 @@
 package memory
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/devfullcycle/gointensivo2/internal/entity"
@@ -14,6 +13,5 @@ func TestShouldSaveOrder(t *testing.T) {
 	orderRepository := NewOrderRepositoryMemory()
 	orderRepository.Save(order)
 	total, _ := orderRepository.GetTotal()
-	fmt.Println(total)
 	assert.Equal(t, 10.00, float64(total))
 }
