@@ -39,3 +39,12 @@ func (r *OrderRepository) GetTotal() (int, error) {
 	}
 	return total, nil
 }
+
+func (r *OrderRepository) Find(OrderID string) (*entity.Order, error) {
+	var order *entity.Order
+	err := r.Db.QueryRow("select id from orders where id = ?", OrderID).Scan(&order)
+	if err != nil {
+		return nil, err
+	}
+	return order, nil
+}

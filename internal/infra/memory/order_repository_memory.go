@@ -32,3 +32,12 @@ func (o *OrderRepositoryMemory) GetTotal() (int, error) {
 	}
 	return total, nil
 }
+
+func (r *OrderRepositoryMemory) Find(OrderID string) (*entity.Order, error) {
+	for _, order := range r.Orders {
+		if order.ID == OrderID {
+			return order, nil
+		}
+	}
+	return nil, nil
+}
